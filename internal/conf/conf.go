@@ -8,7 +8,6 @@
 package conf
 
 import (
-
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -25,14 +24,13 @@ var (
 
 // Config for the environment
 type Config struct {
-    Debug       bool   `envconfig:"DEBUG"`
-    Addr        string `envconfig:"ADDR" default:":8080"`
-    AdminID     string `envconfig:"ADMIN_ID"`
-    AdminSecret string `envconfig:"ADMIN_SECRET"`
-    DbPath      string `envconfig:"DB_PATH" default:"/etc/squid-vault.json"`
-    CorsOrigin  string `envconfig:"CORS_ORIGIN" default:"*"`
+	Debug       bool   `envconfig:"DEBUG"`
+	Addr        string `envconfig:"ADDR" default:":8080"`
+	AdminID     string `envconfig:"ADMIN_ID"`
+	AdminSecret string `envconfig:"ADMIN_SECRET"`
+	DbPath      string `envconfig:"DB_PATH" default:"/etc/squid-vault.json"`
+	CorsOrigin  string `envconfig:"CORS_ORIGIN" default:"*"`
 }
-
 
 func (cfg *Config) validate() error {
 	if cfg.AdminID == "" {
@@ -46,7 +44,6 @@ func (cfg *Config) validate() error {
 }
 
 func (cfg *Config) logging() error {
-
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if cfg.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)

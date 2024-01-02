@@ -5,14 +5,13 @@
 // Distributed under terms of the MIT license.
 //
 
-
 package main
 
 import (
 	"log"
 	"os"
 
-  "github.com/cropalato/squid-vault-auth/internal/squid"
+	"github.com/cropalato/squid-vault-auth/internal/squid"
 	dbplugin "github.com/hashicorp/vault/sdk/database/dbplugin/v5"
 )
 
