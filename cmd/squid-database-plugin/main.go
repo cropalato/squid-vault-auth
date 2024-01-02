@@ -23,7 +23,7 @@ func main() {
 	}
 }
 
-// Run instantiates a Influxdb object, and runs the RPC server for the plugin
+// Run instantiates a squid object, and runs the RPC server for the plugin
 func Run() error {
 	dbplugin.ServeMultiplex(squid.New)
 
