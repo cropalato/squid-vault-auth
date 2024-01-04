@@ -16,10 +16,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-
-	// "io"
 	"log"
 	"net/http"
 	"time"
@@ -27,7 +23,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cropalato/squid-vault-auth/internal/conf"
-	"github.com/cropalato/squid-vault-auth/internal/db"
 	"github.com/cropalato/squid-vault-auth/internal/webservices"
 )
 
@@ -41,18 +36,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	udb, err := db.NewBD(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	err = udb.LoadDB()
-	if err != nil {
-		panic(err)
-	}
-	out, _ := json.MarshalIndent(udb.Users, "", " ")
-	fmt.Printf("%s\n", out)
 
 	srv := http.Server{
 		Addr:              cfg.Addr,
