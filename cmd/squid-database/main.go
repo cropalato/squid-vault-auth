@@ -16,6 +16,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"time"
@@ -23,14 +24,20 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cropalato/squid-vault-auth/internal/conf"
+	"github.com/cropalato/squid-vault-auth/internal/varenv"
 	"github.com/cropalato/squid-vault-auth/internal/webservices"
 )
 
 func main() {
-	cfg, err := conf.NewDefaultConfig()
-	if err != nil {
-		panic(err)
-	}
+	listen := flag.String("listen", varenv.LookupEnvOrString("SQUIDDB_LISTEN", ":8080"), "IP and port used by squid db service. format: '[<ip>]:<port>'. default: ':8080'")
+	admin_account := flag.String("admin_user", varenv.LookupEnvOrString("SQUIDDB_USER", "admin"), "admin account used to call squid db service API'")
+	admin_pass := flag.String("admin_pass", varenv.LookupEnvOrString("SQUIDDB_PASS", "admin"), "admin password used to call squid db service API")
+	db_path := flag.String("db_path", varenv.LookupEnvOrString("SQUIDDB_PATH", "/etc/squid-vault.json"), "squid db file path")
+	cors := flag.String("cors_origin", varenv.LookupEnvOrString("SQUIDDB_CORS", "*"), "configure Access-Control-Allow-Origin header")
+	debug := flag.Bool("debug", varenv.LookupEnvOrBool("SQUIDDB_DEBUG", false), "activate debug mode")
+	flag.Parse()
+
+	cfg := &conf.Config{Debug: *debug, Addr: *listen, AdminID: *admin_account, AdminSecret: *admin_pass, DbPath: *db_path, CorsOrigin: *cors}
 
 	srv := http.Server{
 		Addr:              cfg.Addr,
