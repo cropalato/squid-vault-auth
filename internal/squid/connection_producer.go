@@ -76,38 +76,6 @@ func (s *squidConnectionProducer) Initialize(ctx context.Context, req dbplugin.I
 	return resp, nil
 }
 
-func (c *squidConnectionProducer) Init(ctx context.Context, conf map[string]interface{}, verifyConnection bool) (map[string]interface{}, error) {
-	c.Lock()
-	defer c.Unlock()
-
-	c.rawConfig = conf
-
-	err := mapstructure.WeakDecode(conf, &c)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(c.ConnectionURL) == 0 {
-		return nil, fmt.Errorf("connection_url cannot be empty")
-	}
-
-	// Set initialized to true at this point since all fields are set,
-	// and the connection can be established at a later time.
-	c.Initialized = true
-
-	if verifyConnection {
-		if _, err = c.Connection(ctx); err != nil {
-			return nil, fmt.Errorf("error verifying - connection: %w", err)
-		}
-
-		// if err := c.db.PingContext(ctx); err != nil {
-		//   return nil, fmt.Errorf("error verifying - ping: %w", err)
-		// }
-	}
-
-	return c.rawConfig, nil
-}
-
 func (c *squidConnectionProducer) Connection(ctx context.Context) (interface{}, error) {
 	if !c.Initialized {
 		return nil, connutil.ErrNotInitialized
