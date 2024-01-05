@@ -53,21 +53,24 @@ func (cfg *Config) logging() error {
 
 // NewDefaultConfig reads configuration from environment variables and validates it
 func NewDefaultConfig() (*Config, error) {
+	log.Debug().Msg("logging configured")
 	cfg := new(Config)
 	err := envconfig.Process("", cfg)
 	if err != nil {
+		log.Err(errors.Wrap(err, "Failed to parse environment config"))
 		return nil, errors.Wrap(err, "Failed to parse environment config")
 	}
 	err = cfg.validate()
 	if err != nil {
+		log.Err(errors.Wrap(err, "failed validation of config"))
 		return nil, errors.Wrap(err, "failed validation of config")
 	}
 	err = cfg.logging()
 	if err != nil {
+		log.Err(errors.Wrap(err, "failed setup logging based on config"))
 		return nil, errors.Wrap(err, "failed setup logging based on config")
 	}
-	log.Info().Str("stage", cfg.AdminID).Bool("debug", cfg.Debug).Msg("logging configured")
-	log.Info().Str("stage", cfg.AdminID).Str("branch", cfg.AdminID).Msg("Configuration loaded")
+	log.Debug().Msg("Configuration loaded")
 
 	return cfg, nil
 }

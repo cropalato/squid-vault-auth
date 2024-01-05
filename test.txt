@@ -1,0 +1,14 @@
+test.txt
+
+:Author: rmelo
+:Email: Ricardo Melo <rmelo@ludia.com>
+:Date: 2024-01-05 00:19
+
+Terminal 1:
+go run cmd/squid-database/main.go
+
+Terminal 2:
+sudo docker run -it --rm --name squid-container -e TZ=UTC -p 3128:3128 -v $(pwd)/squid.conf:/etc/squid/squid.conf -v ${HOME}/git/cropalato/squid-vault-auth/bin/squid-database-auth:/squid-database-auth -v ${HOME}/git/cropalato/squid-vault-auth/bin/squid-database-validator:/squid-database-validator ubuntu/squid
+
+Terminal 3:
+https_proxy=http://rmelo:Hello@127.0.0.1:3128 curl https://ifconfig.info

@@ -26,11 +26,6 @@ import (
 	"github.com/cropalato/squid-vault-auth/internal/webservices"
 )
 
-// func slowHandler(w http.ResponseWriter, req *http.Request) {
-// 	time.Sleep(2 * time.Second)
-// 	io.WriteString(w, "I am slow!\n")
-// }
-
 func main() {
 	cfg, err := conf.NewDefaultConfig()
 	if err != nil {
@@ -39,11 +34,10 @@ func main() {
 
 	srv := http.Server{
 		Addr:              cfg.Addr,
-		ReadTimeout:       1 * time.Second,
-		WriteTimeout:      1 * time.Second,
+		ReadTimeout:       3 * time.Second,
+		WriteTimeout:      20 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 2 * time.Second,
-		// Handler:      http.TimeoutHandler(http.HandlerFunc(slowHandler), 1*time.Second, "Timeout!\n"),
 	}
 
 	handlers, err := webservices.NewHandlers(cfg)
