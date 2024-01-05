@@ -11,18 +11,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-
-	// "net/url"
 	"net/http"
 	"sync"
 	"time"
 
-	// "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/go-secure-stdlib/parseutil"
-	// "github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/vault/sdk/database/helper/connutil"
-	// "github.com/hashicorp/vault/sdk/database/helper/dbutil"
 	dbplugin "github.com/hashicorp/vault/sdk/database/dbplugin/v5"
+	"github.com/hashicorp/vault/sdk/database/helper/connutil"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 )
@@ -141,12 +136,6 @@ func (c *squidConnectionProducer) Connection(ctx context.Context) (interface{}, 
 	return nil, nil
 }
 
-func (c *squidConnectionProducer) SecretValues() map[string]string {
-	return map[string]string{
-		c.Password: "[password]",
-	}
-}
-
 // Close attempts to close the connection
 func (c *squidConnectionProducer) Close() error {
 	// Grab the write lock
@@ -155,4 +144,10 @@ func (c *squidConnectionProducer) Close() error {
 	// Nothing to do here, It is an HTTP connection
 
 	return nil
+}
+
+func (c *squidConnectionProducer) SecretValues() map[string]string {
+	return map[string]string{
+		c.Password: "[password]",
+	}
 }

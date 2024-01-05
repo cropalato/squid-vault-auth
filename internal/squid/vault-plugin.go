@@ -35,7 +35,7 @@ type SquidDatabase struct {
 }
 
 func New() (interface{}, error) {
-	db := newDatabase()
+	db := new()
 
 	// This middleware isn't strictly required, but highly recommended to prevent accidentally exposing
 	// values such as passwords in error messages. An example of this is included below
@@ -43,7 +43,7 @@ func New() (interface{}, error) {
 	return dbType, nil
 }
 
-func newDatabase() *SquidDatabase {
+func new() *SquidDatabase {
 	connProducer := &squidConnectionProducer{}
 	connProducer.Type = squidDbTypeName
 
@@ -55,6 +55,68 @@ func newDatabase() *SquidDatabase {
 // Type returns the TypeName for this backend
 func (s *SquidDatabase) Type() (string, error) {
 	return squidDbTypeName, nil
+}
+
+func (s *SquidDatabase) Initialize(ctx context.Context, req dbplugin.InitializeRequest) (dbplugin.InitializeResponse, error) {
+	usernameTemplate, err := strutil.GetString(req.Config, "username_template")
+	if err != nil {
+		return dbplugin.InitializeResponse{}, fmt.Errorf("failed to retrieve username_template: %w", err)
+	}
+	if usernameTemplate == "" {
+		usernameTemplate = defaultUserNameTemplate
+	}
+
+	up, err := template.NewTemplate(template.Template(usernameTemplate))
+	if err != nil {
+		return dbplugin.InitializeResponse{}, fmt.Errorf("unable to initialize username template: %w", err)
+	}
+	s.usernameProducer = up
+
+	_, err = s.usernameProducer.Generate(dbplugin.UsernameMetadata{})
+	if err != nil {
+		return dbplugin.InitializeResponse{}, fmt.Errorf("invalid username template: %w", err)
+	}
+
+	return s.squidConnectionProducer.Initialize(ctx, req)
+}
+
+func (s *SquidDatabase) NewUser(ctx context.Context, req dbplugin.NewUserRequest) (dbplugin.NewUserResponse, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	var result *multierror.Error
+
+	defaultUserCreationIFQL := "{\"username\": \"{{name}}\", \"password\": \"{{password}}\", \"group\": \"" + req.UsernameConfig.RoleName + "\"}"
+
+	creationIFQL := req.Statements.Commands
+	if len(creationIFQL) == 0 {
+		creationIFQL = []string{defaultUserCreationIFQL}
+	}
+
+	username, err := s.usernameProducer.Generate(req.UsernameConfig)
+	if err != nil {
+		return dbplugin.NewUserResponse{}, err
+	}
+
+	m := map[string]string{
+		"username": username,
+		"password": req.Password,
+	}
+	data := []byte(dbutil.QueryHelper(creationIFQL[0], m))
+
+	url := strings.TrimRight(s.ConnectionURL, " /") + "/api/v1/users"
+	err = addUser(url, data)
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if result.ErrorOrNil() != nil {
+		return dbplugin.NewUserResponse{}, fmt.Errorf("unable to create user cleanly: %w", result.ErrorOrNil())
+	}
+	resp := dbplugin.NewUserResponse{
+		Username: username,
+	}
+	return resp, nil
 }
 
 func delUser(url string) error {
@@ -100,101 +162,12 @@ func (s *SquidDatabase) DeleteUser(ctx context.Context, req dbplugin.DeleteUserR
 	return dbplugin.DeleteUserResponse{}, nil
 }
 
-func (s *SquidDatabase) Initialize(ctx context.Context, req dbplugin.InitializeRequest) (dbplugin.InitializeResponse, error) {
-	usernameTemplate, err := strutil.GetString(req.Config, "username_template")
-	if err != nil {
-		return dbplugin.InitializeResponse{}, fmt.Errorf("failed to retrieve username_template: %w", err)
-	}
-	if usernameTemplate == "" {
-		usernameTemplate = defaultUserNameTemplate
-	}
-
-	up, err := template.NewTemplate(template.Template(usernameTemplate))
-	if err != nil {
-		return dbplugin.InitializeResponse{}, fmt.Errorf("unable to initialize username template: %w", err)
-	}
-	s.usernameProducer = up
-
-	_, err = s.usernameProducer.Generate(dbplugin.UsernameMetadata{})
-	if err != nil {
-		return dbplugin.InitializeResponse{}, fmt.Errorf("invalid username template: %w", err)
-	}
-
-	return s.squidConnectionProducer.Initialize(ctx, req)
-}
-
 func addUser(url string, data []byte) error {
 	// create a new HTTP client
 	client := &http.Client{}
 
 	// create a new DELETE request
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	// send the request
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// read the response body
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *SquidDatabase) NewUser(ctx context.Context, req dbplugin.NewUserRequest) (dbplugin.NewUserResponse, error) {
-	s.Lock()
-	defer s.Unlock()
-
-	var result *multierror.Error
-
-	defaultUserCreationIFQL := "{\"username\": \"{{name}}\", \"password\": \"{{password}}\", \"group\": \"" + req.UsernameConfig.RoleName + "\"}"
-
-	creationIFQL := req.Statements.Commands
-	if len(creationIFQL) == 0 {
-		creationIFQL = []string{defaultUserCreationIFQL}
-	}
-
-	username, err := s.usernameProducer.Generate(req.UsernameConfig)
-	if err != nil {
-		return dbplugin.NewUserResponse{}, err
-	}
-
-	m := map[string]string{
-		"username": username,
-		"password": req.Password,
-	}
-	data := []byte(dbutil.QueryHelper(creationIFQL[0], m))
-
-	url := strings.TrimRight(s.ConnectionURL, " /") + "/api/v1/users"
-	err = addUser(url, data)
-	if err != nil {
-		result = multierror.Append(result, err)
-	}
-
-	if result.ErrorOrNil() != nil {
-		return dbplugin.NewUserResponse{}, fmt.Errorf("unable to create user cleanly: %w", result.ErrorOrNil())
-	}
-	resp := dbplugin.NewUserResponse{
-		Username: username,
-	}
-	return resp, nil
-}
-
-func changeUserPassword(url string, data []byte) error {
-	// create a new HTTP client
-	client := &http.Client{}
-
-	// create a new DELETE request
-	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -245,4 +218,31 @@ func (s *SquidDatabase) UpdateUser(ctx context.Context, req dbplugin.UpdateUserR
 	}
 	// Expiration is a no-op
 	return dbplugin.UpdateUserResponse{}, nil
+}
+
+func changeUserPassword(url string, data []byte) error {
+	// create a new HTTP client
+	client := &http.Client{}
+
+	// create a new DELETE request
+	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// read the response body
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return nil
 }
