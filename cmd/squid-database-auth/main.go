@@ -71,7 +71,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if user.User == tokens[0] && hash.CheckPasswordHash(tokens[1], user.Pass) {
+		if user.Username == tokens[0] && hash.CheckPasswordHash(tokens[1], user.Password) {
 			fmt.Println("OK")
 			continue
 		}

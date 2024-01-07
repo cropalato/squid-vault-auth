@@ -132,12 +132,12 @@ func (h *HTTPHandlers) PutUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	up, err := hash.HashPassword(user.Pass)
+	up, err := hash.HashPassword(user.Password)
 	if err != nil {
 		log.Err(err)
 		http.Error(w, "failed processing request", http.StatusInternalServerError)
 	}
-	user.Pass = up
+	user.Password = up
 	err = h.UserDB.AddRecord(user)
 	if err != nil {
 		log.Err(err)
@@ -151,7 +151,7 @@ func (h *HTTPHandlers) PutUser(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg(string(tmp))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	_, err = w.Write([]byte("{ \"msg\": \"Added new user record, username=" + user.User + "\" }\n"))
+	_, err = w.Write([]byte("{ \"msg\": \"Added new user record, username=" + user.Username + "\" }\n"))
 	if err != nil {
 		log.Err(err)
 	}
@@ -170,12 +170,12 @@ func (h *HTTPHandlers) PatchUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	up, err := hash.HashPassword(user.Pass)
+	up, err := hash.HashPassword(user.Password)
 	if err != nil {
 		log.Err(err)
 		http.Error(w, "failed processing request", http.StatusInternalServerError)
 	}
-	user.Pass = up
+	user.Password = up
 
 	err = h.UserDB.UpdateRecord(user)
 	if err != nil {
@@ -199,7 +199,7 @@ func (h *HTTPHandlers) PatchUser(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg(string(tmp))
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write([]byte("{ \"msg\": \"Updated user record, username=" + user.User + "\" }\n"))
+	_, err = w.Write([]byte("{ \"msg\": \"Updated user record, username=" + user.Username + "\" }\n"))
 	if err != nil {
 		log.Err(err)
 	}

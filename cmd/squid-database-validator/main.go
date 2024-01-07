@@ -72,7 +72,7 @@ top:
 		if err != nil {
 			log.Fatal(err)
 		}
-		if user.User == tokens[0] {
+		if user.Username == tokens[0] {
 			for _, g := range user.Groups {
 				if g == tokens[1] {
 					fmt.Println("OK")

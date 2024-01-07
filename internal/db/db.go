@@ -25,10 +25,10 @@ type Database struct {
 }
 
 type UserRecord struct {
-	User    string   `json:"user"`
-	Pass    string   `json:"pass"`
-	Groups  []string `json:"groups"`
-	ExpDate int64    `json:"exp_date"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Groups   []string `json:"groups"`
+	ExpDate  int64    `json:"exp_date"`
 }
 
 // NewBD load json file.
@@ -82,8 +82,8 @@ func (d *Database) GetRecord(user string) (*UserRecord, error) {
 	d.Lock()
 	defer d.Unlock()
 	for _, r := range d.Users {
-		if r.User == user {
-			u := &UserRecord{User: r.User, Pass: r.Pass, Groups: r.Groups, ExpDate: r.ExpDate}
+		if r.Username == user {
+			u := &UserRecord{Username: r.Username, Password: r.Password, Groups: r.Groups, ExpDate: r.ExpDate}
 			return u, nil
 		}
 	}
@@ -95,17 +95,17 @@ func (d *Database) AddRecord(ur UserRecord) error {
 	d.Lock()
 	defer d.Unlock()
 	for _, r := range d.Users {
-		if r.User == ur.User {
+		if r.Username == ur.Username {
 			return errors.New("user already exist")
 			/*
-			   d.Users[i].Pass = ur.Pass
+			   d.Users[i].Password = ur.Password
 			   d.Users[i].Groups = ur.Groups
 			   d.Users[i].ExpDate = ur.ExpDate
 			   return d.SaveDatabase()
 			*/
 		}
 	}
-	d.Users = append(d.Users, UserRecord{User: ur.User, Pass: ur.Pass, Groups: ur.Groups, ExpDate: ur.ExpDate})
+	d.Users = append(d.Users, UserRecord{Username: ur.Username, Password: ur.Password, Groups: ur.Groups, ExpDate: ur.ExpDate})
 	return d.SaveDatabase()
 }
 
@@ -114,8 +114,8 @@ func (d *Database) UpdateRecord(ur UserRecord) error {
 	d.Lock()
 	defer d.Unlock()
 	for i, r := range d.Users {
-		if r.User == ur.User {
-			d.Users[i].Pass = ur.Pass
+		if r.Username == ur.Username {
+			d.Users[i].Password = ur.Password
 			d.Users[i].Groups = ur.Groups
 			d.Users[i].ExpDate = ur.ExpDate
 			return d.SaveDatabase()
@@ -130,7 +130,7 @@ func (d *Database) DeleteRecord(user string) error {
 	defer d.Unlock()
 	var indexes []int
 	for i, r := range d.Users {
-		if r.User == user {
+		if r.Username == user {
 			indexes = append(indexes, i)
 		}
 	}

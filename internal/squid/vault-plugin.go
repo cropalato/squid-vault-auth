@@ -86,7 +86,8 @@ func (s *SquidDatabase) NewUser(ctx context.Context, req dbplugin.NewUserRequest
 
 	var result *multierror.Error
 
-	defaultUserCreationIFQL := "{\"username\": \"{{name}}\", \"password\": \"{{password}}\", \"group\": \"" + req.UsernameConfig.RoleName + "\"}"
+	// defaultUserCreationIFQL := "{\"username\": \"{{username}}\", \"password\": \"{{password}}\", \"group\": \"" + req.UsernameConfig.RoleName + "\"}"
+	defaultUserCreationIFQL := "{\"username\": \"{{username}}\", \"password\": \"{{password}}\", \"groups\": [\"{{rolename}}\"], \"exp_date\": {{exp_date}} }"
 
 	creationIFQL := req.Statements.Commands
 	if len(creationIFQL) == 0 {
@@ -101,11 +102,13 @@ func (s *SquidDatabase) NewUser(ctx context.Context, req dbplugin.NewUserRequest
 	m := map[string]string{
 		"username": username,
 		"password": req.Password,
+		"rolename": req.UsernameConfig.RoleName,
+		"exp_date": string(fmt.Sprintf("%d", req.Expiration.Unix())),
 	}
 	data := []byte(dbutil.QueryHelper(creationIFQL[0], m))
 
 	url := strings.TrimRight(s.ConnectionURL, " /") + "/api/v1/users"
-	err = addUser(url, data)
+	err = addUser(url, data, s.Username, s.Password)
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -119,7 +122,7 @@ func (s *SquidDatabase) NewUser(ctx context.Context, req dbplugin.NewUserRequest
 	return resp, nil
 }
 
-func delUser(url string) error {
+func delUser(url string, user string, pass string) error {
 	// create a new HTTP client
 	client := &http.Client{}
 
@@ -128,6 +131,7 @@ func delUser(url string) error {
 	if err != nil {
 		return err
 	}
+	req.SetBasicAuth(user, pass)
 
 	// send the request
 	resp, err := client.Do(req)
@@ -151,7 +155,7 @@ func (s *SquidDatabase) DeleteUser(ctx context.Context, req dbplugin.DeleteUserR
 	var result *multierror.Error
 
 	url := strings.TrimRight(s.ConnectionURL, " /") + "/api/v1/users/" + req.Username
-	err := delUser(url)
+	err := delUser(url, s.Username, s.Password)
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -162,7 +166,7 @@ func (s *SquidDatabase) DeleteUser(ctx context.Context, req dbplugin.DeleteUserR
 	return dbplugin.DeleteUserResponse{}, nil
 }
 
-func addUser(url string, data []byte) error {
+func addUser(url string, data []byte, user string, pass string) error {
 	// create a new HTTP client
 	client := &http.Client{}
 
@@ -173,6 +177,7 @@ func addUser(url string, data []byte) error {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(user, pass)
 
 	// send the request
 	resp, err := client.Do(req)

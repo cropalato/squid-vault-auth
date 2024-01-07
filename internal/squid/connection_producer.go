@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -81,10 +82,16 @@ func (c *squidConnectionProducer) Connection(ctx context.Context) (interface{}, 
 		return nil, connutil.ErrNotInitialized
 	}
 
-	res, err := http.Get(c.ConnectionURL)
+	req, err := http.NewRequest(http.MethodGet, strings.TrimRight(c.ConnectionURL, "/")+"/authTest", nil)
 	if err != nil {
-		log.Err(err)
-		return nil, err
+		log.Fatal().Err(err)
+	}
+	req.SetBasicAuth(c.Username, c.Password)
+
+	client := http.DefaultClient
+	res, err := client.Do(req)
+	if err != nil {
+		log.Fatal().Err(err)
 	}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
