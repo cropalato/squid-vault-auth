@@ -15,7 +15,7 @@ It can be configured using the following environment variables:
 |--- | --- | --- |
 | SQUIDDB_LISTEN | :8080 | IP and port used by squid db service. format: '[<ip>]:<port>'. default: ':8080' |
 | SQUIDDB_USER | admin | admin account used to call squid db service API |
-| SQUIDDB_PASS | $2b$15$QjL.GaBkHXXTifvFFQo2eOVPqzHpQQ7y/axXslpylNACTpeCYR.t6 | admin password used to call squid db service API. The default is a has for 'admin' |
+| SQUIDDB_PASS | hash(admin) | admin password used to call squid db service API. It is a bcrypt hash |
 | SQUIDDB_PATH | /etc/squid-vault.json | squid db file path |
 | SQUIDDB_CORS | * | configure Access-Control-Allow-Origin header |
 | SQUIDDB_DEBUG | false | activate debug mode |
