@@ -13,7 +13,7 @@ It can be configured using the following environment variables:
 
 | Variable | Default | Description |
 |--- | --- | --- |
-| SQUIDDB_LISTEN | :8080 | IP and port used by squid db service. format: '[<ip>]:<port>'. default: ':8080' |
+| SQUIDDB_LISTEN | :8080 | IP and port used by squid db service. format: '[\<ip>]:\<port>'. default: ':8080' |
 | SQUIDDB_USER | admin | admin account used to call squid db service API |
 | SQUIDDB_PASS | hash(admin) | admin password used to call squid db service API. It is a bcrypt hash |
 | SQUIDDB_PATH | /etc/squid-vault.json | squid db file path |
@@ -31,7 +31,7 @@ Tool used by squid to validate user http basic authentication.
 
 | Variable | Default | Description |
 |--- | --- | --- |
-| SQUIDDB_URL | http://127.0.0.1:8080 | squid db service URL. format: 'http[s]://(<fqdn>|<ip>)[:<port>]' |
+| SQUIDDB_URL | http://127.0.0.1:8080 | squid db service URL. format: 'http[s]://(\<fqdn>|\<ip>)[:\<port>]' |
 | SQUIDDB_USER | admin | admin account used to call squid db service API |
 | SQUIDDB_PASS | admin | admin password used to call squid db service API |
 
@@ -41,7 +41,7 @@ Tool used by squid to check is a user is member of a specific group.
 
 | Variable | Default | Description |
 |--- | --- | --- |
-| SQUIDDB_URL | http://127.0.0.1:8080 | squid db service URL. format: 'http[s]://(<fqdn>|<ip>)[:<port>]' |
+| SQUIDDB_URL | http://127.0.0.1:8080 | squid db service URL. format: 'http[s]://(\<fqdn>|\<ip>)[:\<port>]' |
 | SQUIDDB_USER | admin | admin account used to call squid db service API |
 | SQUIDDB_PASS | admin | admin password used to call squid db service API |
 
