@@ -31,7 +31,9 @@ import (
 func main() {
 	listen := flag.String("listen", varenv.LookupEnvOrString("SQUIDDB_LISTEN", ":8080"), "IP and port used by squid db service. format: '[<ip>]:<port>'. default: ':8080'")
 	admin_account := flag.String("admin_user", varenv.LookupEnvOrString("SQUIDDB_USER", "admin"), "admin account used to call squid db service API'")
-	admin_pass := flag.String("admin_pass", varenv.LookupEnvOrString("SQUIDDB_PASS", "admin"), "admin password used to call squid db service API")
+	// the dafault password is 'admin'. ypu can use create a new one using
+	// python -c 'import bcrypt; print(bcrypt.hashpw(b"PASSWORD", bcrypt.gensalt(rounds=15)).decode("ascii"))'
+	admin_pass := flag.String("admin_pass", varenv.LookupEnvOrString("SQUIDDB_PASS", "$2b$15$QjL.GaBkHXXTifvFFQo2eOVPqzHpQQ7y/axXslpylNACTpeCYR.t6"), "admin password used to call squid db service API")
 	db_path := flag.String("db_path", varenv.LookupEnvOrString("SQUIDDB_PATH", "/etc/squid-vault.json"), "squid db file path")
 	cors := flag.String("cors_origin", varenv.LookupEnvOrString("SQUIDDB_CORS", "*"), "configure Access-Control-Allow-Origin header")
 	debug := flag.Bool("debug", varenv.LookupEnvOrBool("SQUIDDB_DEBUG", false), "activate debug mode")
